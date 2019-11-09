@@ -1,14 +1,14 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Angular, Node, Express and JWT |  Create a web application using client and server side JavaScript. On the client side, we used Angular 4 with upgrade to Angular 8. On server side, Node.js and the famous Express.js framework. We have protected our resources with JSON Web Token (JWT). It also allow to perform Authentication and Authorization, on both Server and Client Side.",
   "main": "index.js",
   "scripts": {
     "start": "nodemon server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Rufin Hounkpe",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
