@@ -1,4 +1,7 @@
-const checkUserToken = (req, res, next) => {
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
+
+exports.checkUserToken = (req, res, next) => {
   if (!req.header('authorization')) return res.status(401).json({ success: false, message: 'Not authorized' });
 
   console.info(`req.header.authorization = ${req.header('authorization')}`);
@@ -15,8 +18,4 @@ const checkUserToken = (req, res, next) => {
       next();
     }
   });
-};
-
-module.exports = {
-  checkUserToken,
 };
