@@ -1,20 +1,26 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const config = require('./config/config');
+const { checkUserToken } = require('./middlewares');
+
+let data = require('../data/jobs');
+let users = require('../data/users').users;
 
 module.exports = () => {
   const app = express();
-  const router = express.Router();
-  const cors = require('cors')
-  const jwt = require('jsonwebtoken');
 
-  app.use('/api', bodyParser.json());
-  app.use('/api', bodyParser.urlencoded({ extended: true}));
+  app.use(bodyParser.urlencoded({ extended: true}));
+  app.use(bodyParser.json());
   app.use(cors());
 
 
+  const api = express.Router();
+  const auth = express.Router();
+  const router = express.Router();
 
 
-  let data = require('../data/jobs');
   let initialJobs = data.jobs;
   let addedJobs = [];
 
@@ -23,45 +29,9 @@ module.exports = () => {
   };
 
 
-  users = [];
-
-  const rufin = {
-    id: 1,
-    email: 'rhounkpe@yahoo.fr',
-    nickname: 'rhounkpe',
-    password: 'Pa$$w0rd',
-    role: 'admin',
-  };
-
-  const dominique = {
-    id: 1,
-    email: 'dominique@yahoo.fr',
-    nickname: 'dominique',
-    password: 'Pa$$w0rd',
-    role: 'manager',
-  };
-
-  const arno = {
-    id: 1,
-    email: 'arno@yahoo.fr',
-    nickname: 'arno',
-    password: 'Pa$$w0rd',
-    role: 'user',
-  };
-
-  users.push(rufin, dominique, arno);
-
-  const secret = '$!7;~}d32"Z;-^`TchH*Am6Lzge}7/)(vV2S_tNj?g+/T2NFTKP$FnZ3>LG9`^-[~-S?pLL4&)ZVP(<55k,r/`Wp&w<rv8}Lcp_$7H4+ae`a%{hTz66UdDTS:c]vLJ?`B<Y?@Gmm';
-
-
-
-
-
-  const api = express.Router();
-
-  const auth = express.Router();
 
   auth.post('/login', (req, res) => {
+    console.log(`Req.body = ${req}`);
     if (req.body) {
       const email = req.body.email.toLocaleLowerCase();
       const password = req.body.password;
@@ -74,10 +44,10 @@ module.exports = () => {
         user = users[index];
 
         const token = jwt.sign({
-          issuer: 'http://localhost:4201',
+          issuer: config.jwt.issuer,
           role: user.role,
           email: user.email,
-        }, secret);
+        }, config.jwt.secret);
         res.status(200).json({
           success: true,
           token,
@@ -125,24 +95,7 @@ module.exports = () => {
     }
   });
 
-  const checkUserToken = (req, res, next) => {
-    if (!req.header('authorization')) return res.status(401).json({ success: false, message: 'Not authorized' });
 
-    console.info(`req.header.authorization = ${req.header('authorization')}`);
-
-    const authorizationParts = req.header('authorization').split(' ');
-    const token = authorizationParts[1];
-
-    jwt.verify(token, secret, (err, decodedToken) => {
-      if (err) {
-        console.error(err);
-        return res.status(401).json({ success: false, message: 'Token non valide' });
-      } else {
-        console.log(`decoded token = ${JSON.stringify(decodedToken)}`);
-        next();
-      }
-    });
-  };
 
   api.get('/jobs', (req, res) => {
     res.json(getAllJobs());
@@ -151,7 +104,6 @@ module.exports = () => {
   api.get('/jobs/:email', (req, res) => {
     const email = req.params.email;
 
-    // const jobs = getAllJobs().filter(job => (job.email === email));
     const jobs = getAllJobs().filter(job => job.email === email);
 
     res.status(200).json({
