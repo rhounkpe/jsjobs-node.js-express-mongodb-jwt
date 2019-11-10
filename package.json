@@ -7,7 +7,7 @@
     "start": "nodemon server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["Node.js", "Express", "MongoDB","JWT", "JSON Web Token"],
   "author": "Rufin Hounkpe",
   "license": "ISC",
   "dependencies": {
