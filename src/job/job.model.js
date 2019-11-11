@@ -15,13 +15,22 @@ const jobSchema = new Schema({
     email: {
       type: String,
     },
-  },
-  address: {
-    city: {
-      type: String
+    url: {
+      type: String,
     },
-    zipcode: {
-      type: String
+    address: {
+      street: {
+        type: String
+      },
+      city: {
+        type: String
+      },
+      zipcode: {
+        type: String
+      },
+    },
+    description: {
+      type: String,
     },
   },
   description: {
@@ -38,9 +47,6 @@ const jobSchema = new Schema({
       type: String
     },
   },
-  startdate: {
-    type: Date
-  },
   experience: {
     type: String
   },
@@ -52,6 +58,9 @@ const jobSchema = new Schema({
   },
   field: {
     type: String
+  },
+  startdate: {
+    type: Date
   },
   publishdate: {
     type: Date,
