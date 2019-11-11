@@ -1,20 +1,36 @@
 'use strict';
-let data = require('../../data/jobs');
-let initialJobs = data.jobs;
-let addedJobs = [];
 
-const getAllJobs = () => {
-  return [...addedJobs, ...initialJobs];
+const Job = require('./job.model');
+
+
+
+const allJobs = () => {
+  Job.find({}).sort().exec((err, jobs) => {
+    if (err) return err;
+    return jobs;
+  });
 };
 
-exports.getAllJobs = (req, res) => {
 
-  res.json(getAllJobs());
+exports.getAllJobs = (req, res) => {
+  Job.find({}).sort().exec((err, jobs) => {
+    if (err) {
+      res.status(400).send({
+        message: err.stack
+      });
+    }
+    res.status(200).send(jobs);
+  });
 };
 
 exports.getAllJobsByUser = (req, res) => {
   const email = req.params.email;
-  const jobs = getAllJobs().filter(job => job.email === email);
+
+
+  const jobs = Job.find({}).exec((err, jobs) => {
+    if (err) return err;
+    return jobs.filter(job => job.email === email)
+  });
 
   res.status(200).json({
     success: true,
@@ -24,7 +40,7 @@ exports.getAllJobsByUser = (req, res) => {
 
 exports.getJobById = (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const jobs = getAllJobs().filter(j => j.id === id);
+  const jobs = allJobs().filter(j => j.id === id);
 
   if (jobs.length === 1) {
     res.json({
@@ -40,11 +56,16 @@ exports.getJobById = (req, res) => {
 };
 
 exports.create = (req, res) => {
-  const job = req.body;
-  console.log(job);
-  addedJobs = [job, ...addedJobs];
-  console.log('total number of jobs: ', getAllJobs().length);
-  res.json(job);
+  const job = new Job(req.body);
+
+  job.save((err) => {
+    if (err) {
+      return res.status(400).send({
+        message: console.error(err)
+      });
+    }
+    res.json(job);
+  });
 };
 
 
@@ -53,7 +74,7 @@ exports.search = (req, res) => {
 
   let place = req.params.place;
 
-  let jobs = getAllJobs().filter(
+  let jobs = allJobs().filter(
     job => (job.description.toLowerCase().includes(term) || job.title.toLowerCase().includes(term) ));
 
   if (place) {
