@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const jobRoutes = require('./job/job.route');
 const userRoutes = require('./user/user.route');
+const companyRoutes = require('./company/company.route');
 
 module.exports = () => {
   const app = express();
@@ -14,11 +15,9 @@ module.exports = () => {
   app.use(cors());
 
 
-  const api = express.Router();
-  const auth = express.Router();
-
   jobRoutes.initializePublicApiRoutes(app);
   userRoutes.initializePublicApiRoutes(app);
+  companyRoutes.initializePublicApiRoutes(app);
 
 
 
