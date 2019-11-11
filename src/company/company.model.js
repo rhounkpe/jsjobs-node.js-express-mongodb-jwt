@@ -24,6 +24,9 @@ const companySchema = new Schema({
       type: String
     },
   },
+  password: {
+    type: String,
+  },
   description: {
     type: String,
   },

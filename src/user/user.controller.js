@@ -2,36 +2,40 @@
 
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-let users = require('../../data/users').users;
+
+const Company = require('../company/company.model');
 
 exports.login = (req, res) => {
-  console.log(`Req.body = ${req.body}`);
+
   if (req.body) {
-    const email = req.body.email.toLocaleLowerCase();
-    const password = req.body.password;
+    const email = req.body.email.trim();
+    const password = req.body.password.trim();
 
-    const index = users.findIndex(user => user.email === email);
+    let company;
+    Company.findOne({email: email}).exec((err, comp) => {
+      if (err) return err;
 
-    let user;
+      company = comp;
+      if (company && company.password === password) {
+        const token = jwt.sign({
+          iss: config.jwt.issuer,
+          role: company.role,
+          email: company.email,
+          companyId: company.id,
+        }, config.jwt.secret);
 
-    if ((index > -1) && (users[index].password === password)) {
-      user = users[index];
+        res.status(200).json({
+          success: true,
+          token,
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          message: 'identifiant incorrects'
+        });
+      }
+    });
 
-      const token = jwt.sign({
-        issuer: config.jwt.issuer,
-        role: user.role,
-        email: user.email,
-      }, config.jwt.secret);
-      res.status(200).json({
-        success: true,
-        token,
-      });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: 'identifiant incorrects'
-      });
-    }
   } else {
     res.status(500).json({
       success: false,
@@ -54,7 +58,7 @@ exports.register = (req, res) => {
       password,
     };
 
-    users = [user, ...users];
+    //users = [user, ...users];
 
     res.json({
       success: true,
