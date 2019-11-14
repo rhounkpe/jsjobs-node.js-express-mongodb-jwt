@@ -1,7 +1,6 @@
-/*
 'use strict';
-const Company = require('../company/company.model');
 const mongoose = require('mongoose');
+const Promise = require('bluebird');
 const Schema = mongoose.Schema;
 
 const JobSchema = new Schema({
@@ -80,10 +79,6 @@ const JobSchema = new Schema({
   },
 });
 
-const Job = mongoose.model('Job', JobSchema);
 module.exports = {
-  Job,
   JobSchema,
 };
-
-*/

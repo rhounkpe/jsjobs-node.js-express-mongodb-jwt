@@ -1,11 +1,14 @@
+/*
 'use strict';
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const { LoginSchema } = require('./company.schemas')
+
 const bcrypt = require('bcrypt');
 
-const companySchema = new Schema({
+const CompanySchema = new Schema({
   name: {
     type: String,
   },
@@ -30,14 +33,14 @@ const companySchema = new Schema({
   password: {
     type: String,
     required: true,
-    match: /(?=.*[a-zA-Z])(?=.*[0-9]+)(?=.*[!*&^%$#@()+]+).*/,
+    match: /(?=.*[a-zA-Z])(?=.*[0-9]+)(?=.*[!*&^%$#@()+]+).*!/,
   },
   description: {
     type: String,
   },
 });
 
-companySchema.pre("save", function(next) {
+CompanySchema.pre("save", function(next) {
   if (!this.isModified("password")) {
     return next();
   }
@@ -52,7 +55,7 @@ companySchema.pre("save", function(next) {
   })
 });
 
-companySchema.methods.passwordIsValid = function(password, callback) {
+CompanySchema.methods.passwordIsValid = function(password, callback) {
   bcrypt.compare(password, this.password, function(err, results) {
     if (err) {
       callback(false);
@@ -62,9 +65,13 @@ companySchema.methods.passwordIsValid = function(password, callback) {
   });
 };
 
-const Company = mongoose.model('Company', companySchema);
+const Company = mongoose.model('Company', CompanySchema);
+
+const LoginSchema = mongoose.model('LoginSchema', LoginSchema);
 
 module.exports = {
-  companySchema,
-  Company
+  CompanySchema,
+  Company,
+  Login: LoginSchema
 };
+*/

@@ -1,41 +1,59 @@
 'use strict';
 
-const Job = require('./job.model');
+const { getJobModel } = require('./job.model.factory');
 
 
+const allJobs = async () => {
+  try {
+    const Job = await getJobModel();
 
-const allJobs = () => {
-  Job.find({}).sort().exec((err, jobs) => {
-    if (err) return err;
-    return jobs;
-  });
+    await Job.find({}).sort().exec(async (err, jobs) => {
+      if (err) return err;
+      return jobs;
+    });
+  }catch (e) {
+    throw e;
+  }
+
 };
 
 
-exports.getAllJobs = (req, res) => {
-  Job.find({}).sort().exec((err, jobs) => {
-    if (err) {
-      res.status(400).send({
-        message: err.stack
-      });
-    }
-    res.status(200).send(jobs);
-  });
+exports.getAllJobs = async (req, res) => {
+  try {
+    const Job = await getJobModel();
+
+    await Job.find({}).sort().exec(async (err, jobs) => {
+      if (err) {
+        return res.status(401).send({
+          message: err.stack
+        });
+      }
+      return res.status(200).send(jobs);
+    });
+  } catch (e) {
+    throw e;
+  }
+
 };
 
-exports.getAllJobsByUser = (req, res) => {
+exports.getAllJobsByUser = async (req, res) => {
   const email = req.params.email;
 
+  try {
+    const Job = await getJobModel();
 
-  const jobs = Job.find({}).exec((err, jobs) => {
-    if (err) return err;
-    return jobs.filter(job => job.email === email)
-  });
+    await Job.find({}).exec(async (err, jobs) => {
+      if (err) return err;
+      jobs.filter(job => job.email === email);
 
-  res.status(200).json({
-    success: true,
-    jobs,
-  });
+      res.status(200).json({
+        success: true,
+        jobs,
+      });
+    });
+  } catch (e) {
+    throw e;
+  }
 };
 
 exports.getJobById = (req, res) => {

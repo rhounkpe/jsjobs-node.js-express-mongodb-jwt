@@ -5,35 +5,59 @@ const config = require('../config/config');
 
 const { check, validationResult, checkSchema } = require('express-validator');
 
-const {Company, companySchema} = require('../company/company.model');
-const { companyRegistrationSchema } = require('./validation.schemas');
+const { getCompanyModel, getLoginModel } = require('./company.model.factory');
+const { companyRegistrationSchema } = require('./company.validation.schemas');
+const { CompanySchema, LoginSchema } = require('./company.schemas');
+
 
 exports.login = async (req, res) => {
   // Against Brute Force Attack
   const delayResponse = response => {
     setTimeout(() => {
       response();
-    }, 1000)
+    }, 1000);
   };
 
+  console.log('On est dans le login....');
+
   try {
-    //const Company = await getCompanyModel();
+    const Company = await getCompanyModel();
+
+    // const {clientIp} = req;
     const { email, password } = req.body;
 
     // req.checkBody(loginSchema)
     // const errors = req.validationErrors();
+    const errors = [];
 
-    await Company.findOne({email: email}).exec((err, existingCompany) => {
+/*    if(errors) {
+      return delayResponse(() => res.status(401).send('Invalid username or password'));
+    }*/
+
+/*    const identityKey = `${email}-${clientIp}`;
+    const Login = await getLoginModel();*/
+
+    // Brute Force Attack in parallel
+/*
+    if (await Login.inProgress(identityKey)) {
+      return delayResponse(() => res.status(500).send('Login already in progress.'));
+    }
+*/
+
+/*    if (!await Login.canAuthenticate(identityKey)) {
+      return delayResponse(() => res.status(500).send('The account is temporarily locked out.'));
+    }*/
+
+    await Company.findOne({email: email}).exec(async (err, existingCompany) => {
       if (err) {
-        return res.status(401).send('Invalid email or password for a company');
-      } else {
-        existingCompany.passwordIsValid(password, function (err, results) {
-          if (err) {
-            return res.status(500).send('N° 1 | There is a problem logging in at the moment. Please try again later.');
-          } else if (!results) {
-            return res.status(401).send('Invalid email or password');
-          }
+        console.log(`Error while authenticated: ${err}`);
+        //await Login.failedLoginAttempt(identityKey);
+        // Login.failedLoginAttempt(identityKey);
 
+        return delayResponse(() => res.status(401).send('Invalid email or password for a company'));
+      } else {
+        if (existingCompany && await existingCompany.passwordIsValid(password)) {
+          console.log(`Existing company: ${existingCompany}`);
           const companyInfo = {
             _id: existingCompany._id,
             email: existingCompany.email,
@@ -41,6 +65,7 @@ exports.login = async (req, res) => {
           };
 
           // req.session.login(companyInfo);
+
           const token = jwt.sign({
             iss: config.jwt.issuer,
             role: existingCompany.role,
@@ -48,11 +73,14 @@ exports.login = async (req, res) => {
             companyId: existingCompany.id,
           }, config.jwt.secret);
 
+          const Login = await getCompanyModel();
+          // await Login.succefulLoginAttemp(identityKey);
+
           return delayResponse(() => res.status(200).json({
             company: existingCompany,
             token,
           }));
-        });
+        }
       }
     });
 
@@ -114,5 +142,18 @@ exports.register = async (req, res) => {
     console.error(`An error happened when creating a new company: ${e.stack}`);
   }
 
+};
+
+exports.logout = (req, res) => {
+  return new Promise((resolve, reject) => {
+    try {
+      if (req.session) {
+        req.session.destroy();
+        resolve(res.sendStatus(200));
+      }
+    } catch (e) {
+      return reject(res.sendStatus(500));
+    }
+  });
 };
 
