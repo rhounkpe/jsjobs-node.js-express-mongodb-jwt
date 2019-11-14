@@ -3,7 +3,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-const Company = require('../company/company.model');
+const { Company, companySchema} = require('../company/company.model');
 
 exports.login = (req, res) => {
 
@@ -43,3 +43,36 @@ exports.login = (req, res) => {
     });
   }
 };
+
+exports.register = (req, res) => {
+  if (req.body) {
+    const email = req.body.email.trim();
+    const password = req.body.password.trim();
+    const nickname = req.body.nickname.trim();
+
+    const company = new Company({
+      name: nickname,
+      email: email,
+      password: password
+    });
+
+    company.save((err, comp) => {
+      if (err) {
+        return res.status(400).send({
+          message: `Error: ${err.stack}`
+        });
+      } else {
+        res.json({
+          success: true,
+          company: comp
+        });
+      }
+    });
+  } else {
+    res.json({
+      success: false,
+      message: 'Echec de la création de une nouvelle compagnie',
+    });
+  }
+};
+

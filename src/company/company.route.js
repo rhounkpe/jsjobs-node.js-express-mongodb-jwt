@@ -8,8 +8,5 @@ exports.initializePublicApiRoutes = app => {
     .post(controller.login);
 
   app.route('/company/auth/register')
-    .post((req, res) => {
-      res.send('Will register a new company...');
-
-    });
+    .post(controller.register);
 };

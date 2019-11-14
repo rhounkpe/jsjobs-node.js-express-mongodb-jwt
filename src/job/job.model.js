@@ -1,5 +1,5 @@
 'use strict';
-
+const Company = require('../company/company.model');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -7,6 +7,11 @@ const jobSchema = new Schema({
   title: {
     type: String,
     required: true,
+  },
+  comp: {
+    type: Schema.Types.ObjectId,
+    ref: "Company",
+    require: false,
   },
   company: {
     name: {
