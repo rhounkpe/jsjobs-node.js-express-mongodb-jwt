@@ -11,6 +11,7 @@ const companySchema = new Schema({
   },
   email: {
     type: String,
+    required: true
   },
   url: {
     type: String,
@@ -28,6 +29,8 @@ const companySchema = new Schema({
   },
   password: {
     type: String,
+    required: true,
+    match: /(?=.*[a-zA-Z])(?=.*[0-9]+)(?=.*[!*&^%$#@()+]+).*/,
   },
   description: {
     type: String,

@@ -9,9 +9,20 @@ const {Company, companySchema} = require('../company/company.model');
 const { companyRegistrationSchema } = require('./validation.schemas');
 
 exports.login = async (req, res) => {
+  // Against Brute Force Attack
+  const delayResponse = response => {
+    setTimeout(() => {
+      response();
+    }, 1000)
+  };
+
   try {
     //const Company = await getCompanyModel();
     const { email, password } = req.body;
+
+    // req.checkBody(loginSchema)
+    // const errors = req.validationErrors();
+
     await Company.findOne({email: email}).exec((err, existingCompany) => {
       if (err) {
         return res.status(401).send('Invalid email or password for a company');
@@ -37,16 +48,16 @@ exports.login = async (req, res) => {
             companyId: existingCompany.id,
           }, config.jwt.secret);
 
-          return res.status(200).json({
+          return delayResponse(() => res.status(200).json({
             company: existingCompany,
             token,
-          });
+          }));
         });
       }
     });
 
   } catch (err) {
-    return res.status(500).send('There is a problem logging in at the moment. Please try again later.');
+    return delayResponse(() => res.status(500).send('There is a problem logging in at the moment. Please try again later.'));
   }
 };
 
