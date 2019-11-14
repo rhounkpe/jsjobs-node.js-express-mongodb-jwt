@@ -50,10 +50,13 @@ companySchema.pre("save", function(next) {
 });
 
 companySchema.methods.passwordIsValid = function(password, callback) {
-  const results = !this.password || password
-    ? false
-    : this.password = password;
-  callback(null, results);
+  bcrypt.compare(password, this.password, function(err, results) {
+    if (err) {
+      callback(false);
+      return;
+    }
+    callback(null, results);
+  });
 };
 
 const Company = mongoose.model('Company', companySchema);
