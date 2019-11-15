@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const sessionManagementConfig = require('./config/sessions.management');
 const cors = require('cors');
 
 const jobRoutes = require('./job/job.route');
@@ -9,6 +10,7 @@ const companyRoutes = require('./company/company.route');
 module.exports = () => {
   const app = express();
 
+  sessionManagementConfig(app);
 
   app.use(bodyParser.urlencoded({ extended: true}));
   app.use(bodyParser.json());

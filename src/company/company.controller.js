@@ -6,7 +6,7 @@ const config = require('../config/config');
 const {check, validationResult, checkSchema} = require('express-validator');
 
 const {getCompanyModel, getLoginModel} = require('./company.model.factory');
-const {companyRegistrationSchema} = require('./company.validation.schemas');
+const { companyRegistrationSchema } = require('./company.validation.schemas');
 
 
 exports.login = async (req, res) => {
@@ -58,7 +58,11 @@ exports.login = async (req, res) => {
           nickname: existingCompany.nickname
         };
 
-        // req.session.login(companyInfo);
+        req.session.login(companyInfo, function (err) {
+          if (err) {
+            return res.status(500).send('There was an error logging in. Please try again later.');
+          }
+        });
 
         const token = jwt.sign({
           iss: config.jwt.issuer,
