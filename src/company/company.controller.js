@@ -6,7 +6,7 @@ const config = require('../config/config');
 const {check, validationResult, checkSchema} = require('express-validator');
 
 const {getCompanyModel, getLoginModel} = require('./company.model.factory');
-const { companyRegistrationSchema } = require('./company.validation.schemas');
+const {companyRegistrationSchema} = require('./company.validation.schemas');
 
 
 exports.login = async (req, res) => {
@@ -27,9 +27,9 @@ exports.login = async (req, res) => {
     // const errors = req.validationErrors();
     const errors = [];
 
-    /*    if(errors) {
-          return delayResponse(() => res.status(401).send('Invalid username or password'));
-        }*/
+    if (errors.length > 0) {
+      return delayResponse(() => res.status(401).send('Invalid username or password'));
+    }
 
     const identityKey = `${email}-${clientIp}`;
     const Login = await getLoginModel();
@@ -39,23 +39,28 @@ exports.login = async (req, res) => {
       return delayResponse(() => res.status(500).send('Login already in progress.'));
     }
 
+
     if (!(await Login.canAuthenticate(identityKey))) {
       return delayResponse(() => res.status(500).send('The account is temporarily locked out.'));
     }
 
+    const existingCompany = await Company.findOne({email: email}).exec();
 
-    Company.findOne({email: email}).exec(async (err, existingCompany) => {
-      if (err) {
-        console.log(`Error while authenticated: ${err}`);
-        await Login.failedLoginAttempt(identityKey);
+    if (existingCompany) {
 
-        return delayResponse(() => res.status(401).send('Invalid email or password for a company'));
-      }
       if (await existingCompany.passwordIsValid(password)) {
+        const token = jwt.sign({
+          iss: config.jwt.issuer,
+          role: existingCompany.role,
+          email: existingCompany.email,
+          companyId: existingCompany.id,
+        }, config.jwt.secret);
+
         const companyInfo = {
           _id: existingCompany._id,
           email: existingCompany.email,
-          nickname: existingCompany.nickname
+          nickname: existingCompany.nickname,
+          token
         };
 
         req.session.login(companyInfo, function (err) {
@@ -64,25 +69,26 @@ exports.login = async (req, res) => {
           }
         });
 
-        const token = jwt.sign({
-          iss: config.jwt.issuer,
-          role: existingCompany.role,
-          email: existingCompany.email,
-          companyId: existingCompany.id,
-        }, config.jwt.secret);
-
         await Login.successfulLoginAttempt(identityKey);
 
         return delayResponse(() => res.status(200).json({
           company: existingCompany,
           token,
         }));
+      } else {
+        // Email is good, so we have an issue with the password
+        await Login.failedLoginAttempt(identityKey);
+        return delayResponse(() => res.status(401).send(`Invalid password for company with email address: ${email}`));
       }
 
-    });
+    } else {
+      // We don't have a user with this email. So no company for this email.
+      await Login.failedLoginAttempt(identityKey);
+      return delayResponse(() => res.status(401).send(`Invalid email. We do not find a company with email address: ${email}`));
+    }
 
   } catch (err) {
-    return delayResponse(() => res.status(500).send('There is a problem logging in at the moment. Please try again later.'));
+    return delayResponse(() => res.status(500).send('There was an error attempting to login. Please try again later.'));
   }
 };
 

@@ -42,7 +42,7 @@ LoginSchema.static("canAuthenticate", async function (key) {
 
   const timeout = (new Date() - new Date(login.timeout).addMinutes(1));
   if (timeout >= 0) {
-    await login.deleteOne();
+    await this.deleteOne(login);
     return true;
   }
   return false;
@@ -64,7 +64,7 @@ LoginSchema.static("successfulLoginAttempt", async function (key) {
   const login = await this.findOne({identityKey: key});
 
   if (login) {
-    return await login.deleteOne();
+    return await this.deleteOne(login);
   }
 });
 
@@ -73,7 +73,10 @@ LoginSchema.static("inProgress", async function (key) {
   const query = {identityKey: key};
   const update = {inProgress: true};
   const options = {setDefaultsOnInsert: true, upsert: true};
-  return this.findOneAndUpdate(query, update, options).exec();
+
+  await this.findOneAndUpdate(query, update, options).exec();
+
+  return (login && login.inProgress);
 });
 
 
