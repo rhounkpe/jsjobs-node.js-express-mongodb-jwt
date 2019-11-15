@@ -43,7 +43,8 @@ exports.login = async (req, res) => {
       return delayResponse(() => res.status(500).send('The account is temporarily locked out.'));
     }
 
-    await Company.findOne({email: email}).exec(async (err, existingCompany) => {
+
+    Company.findOne({email: email}).exec(async (err, existingCompany) => {
       if (err) {
         console.log(`Error while authenticated: ${err}`);
         await Login.failedLoginAttempt(identityKey);

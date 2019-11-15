@@ -124,7 +124,7 @@ const ContactSchema = new Schema({
   gsm: {
     type: String
   }
-});
+}, {_id: false});
 
 
 /**
