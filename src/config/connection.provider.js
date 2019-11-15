@@ -9,6 +9,12 @@ mongoose.Promise = Promise;
 const _internalConnectionPool = {};
 
 module.exports = function (url, database, options) {
+  // remove Deprecation Warnings
+  mongoose.set('useNewUrlParser', true);
+  mongoose.set('useFindAndModify', false);
+  mongoose.set('useCreateIndex', true);
+  mongoose.set('useUnifiedTopology', true);
+
   const opts = Object.assign({}, {
     server: {
       poolSize: 5

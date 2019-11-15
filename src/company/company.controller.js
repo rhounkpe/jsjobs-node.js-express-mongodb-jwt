@@ -3,11 +3,10 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-const { check, validationResult, checkSchema } = require('express-validator');
+const {check, validationResult, checkSchema} = require('express-validator');
 
-const { getCompanyModel, getLoginModel } = require('./company.model.factory');
-const { companyRegistrationSchema } = require('./company.validation.schemas');
-const { CompanySchema, LoginSchema } = require('./company.schemas');
+const {getCompanyModel, getLoginModel} = require('./company.model.factory');
+const {companyRegistrationSchema} = require('./company.validation.schemas');
 
 
 exports.login = async (req, res) => {
@@ -18,70 +17,63 @@ exports.login = async (req, res) => {
     }, 1000);
   };
 
-  console.log('On est dans le login....');
-
   try {
     const Company = await getCompanyModel();
 
-    // const {clientIp} = req;
-    const { email, password } = req.body;
+    const {clientIp} = req;
+    const {email, password} = req.body;
 
     // req.checkBody(loginSchema)
     // const errors = req.validationErrors();
     const errors = [];
 
-/*    if(errors) {
-      return delayResponse(() => res.status(401).send('Invalid username or password'));
-    }*/
+    /*    if(errors) {
+          return delayResponse(() => res.status(401).send('Invalid username or password'));
+        }*/
 
-/*    const identityKey = `${email}-${clientIp}`;
-    const Login = await getLoginModel();*/
+    const identityKey = `${email}-${clientIp}`;
+    const Login = await getLoginModel();
 
     // Brute Force Attack in parallel
-/*
     if (await Login.inProgress(identityKey)) {
       return delayResponse(() => res.status(500).send('Login already in progress.'));
     }
-*/
 
-/*    if (!await Login.canAuthenticate(identityKey)) {
+    if (!(await Login.canAuthenticate(identityKey))) {
       return delayResponse(() => res.status(500).send('The account is temporarily locked out.'));
-    }*/
+    }
 
     await Company.findOne({email: email}).exec(async (err, existingCompany) => {
       if (err) {
         console.log(`Error while authenticated: ${err}`);
-        //await Login.failedLoginAttempt(identityKey);
-        // Login.failedLoginAttempt(identityKey);
+        await Login.failedLoginAttempt(identityKey);
 
         return delayResponse(() => res.status(401).send('Invalid email or password for a company'));
-      } else {
-        if (existingCompany && await existingCompany.passwordIsValid(password)) {
-          console.log(`Existing company: ${existingCompany}`);
-          const companyInfo = {
-            _id: existingCompany._id,
-            email: existingCompany.email,
-            nickname: existingCompany.nickname
-          };
-
-          // req.session.login(companyInfo);
-
-          const token = jwt.sign({
-            iss: config.jwt.issuer,
-            role: existingCompany.role,
-            email: existingCompany.email,
-            companyId: existingCompany.id,
-          }, config.jwt.secret);
-
-          const Login = await getCompanyModel();
-          // await Login.succefulLoginAttemp(identityKey);
-
-          return delayResponse(() => res.status(200).json({
-            company: existingCompany,
-            token,
-          }));
-        }
       }
+      if (await existingCompany.passwordIsValid(password)) {
+        const companyInfo = {
+          _id: existingCompany._id,
+          email: existingCompany.email,
+          nickname: existingCompany.nickname
+        };
+
+        // req.session.login(companyInfo);
+
+        const token = jwt.sign({
+          iss: config.jwt.issuer,
+          role: existingCompany.role,
+          email: existingCompany.email,
+          companyId: existingCompany.id,
+        }, config.jwt.secret);
+
+        await Login.successfulLoginAttempt(identityKey);
+
+        return delayResponse(() => res.status(200).json({
+          company: existingCompany,
+          token,
+        }));
+      }
+
     });
 
   } catch (err) {
@@ -90,16 +82,16 @@ exports.login = async (req, res) => {
 };
 
 
-const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
+const errorFormatter = ({location, msg, param, value, nestedErrors}) => {
   // Build your resulting errors however you want! String, object, whatever - it works!
   return `${location}[${param}]: ${msg}`;
 };
 
 exports.register = async (req, res) => {
   try {
-    // const Company = await getCompanyModel();
+    const Company = await getCompanyModel();
 
-    checkSchema(companyRegistrationSchema) ;
+    checkSchema(companyRegistrationSchema);
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(500).json(`There is an error: ${errors.array()}`);
@@ -138,7 +130,7 @@ exports.register = async (req, res) => {
       });
     }
 
-  }catch (e) {
+  } catch (e) {
     console.error(`An error happened when creating a new company: ${e.stack}`);
   }
 

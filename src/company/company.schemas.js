@@ -42,7 +42,7 @@ LoginSchema.static("canAuthenticate", async function (key) {
 
   const timeout = (new Date() - new Date(login.timeout).addMinutes(1));
   if (timeout >= 0) {
-    await login.remove();
+    await login.deleteOne();
     return true;
   }
   return false;
@@ -56,13 +56,15 @@ LoginSchema.static("failedLoginAttempt", async function (key) {
   const query = {identityKey: key};
   const update = {$inc: {failedAttempts: 1}, timeout: new Date(), inProgress: false};
   const options = {setDefaultsOnInsert: true, upsert: true};
+
   return await this.findOneAndUpdate(query, update, options).exec();
 });
 
 LoginSchema.static("successfulLoginAttempt", async function (key) {
   const login = await this.findOne({identityKey: key});
+
   if (login) {
-    return await login.remove();
+    return await login.deleteOne();
   }
 });
 
@@ -70,8 +72,58 @@ LoginSchema.static("inProgress", async function (key) {
   const login = await this.findOne({identityKey: key});
   const query = {identityKey: key};
   const update = {inProgress: true};
-  const options = { setDefaultsOnInsert: true, upsert: true};
+  const options = {setDefaultsOnInsert: true, upsert: true};
   return this.findOneAndUpdate(query, update, options).exec();
+});
+
+
+/**
+ * AddressSchema
+ */
+const AddressSchema = new Schema(
+  {
+    type: {
+      type: String
+    },
+    street: {
+      type: String
+    },
+    city: {
+      type: String
+    },
+    zipcode: {
+      type: Number
+    },
+    state: {
+      type: String
+    },
+    country: {
+      type: String
+    }
+  },
+  {
+    _id: false
+  }
+);
+
+const ContactSchema = new Schema({
+  email: {
+    type: String,
+    required: true,
+    match: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i
+  },
+  url: {
+    type: String,
+  },
+  tel: {
+    type: String
+  },
+  fax: {
+    type: String
+  },
+  gsm: {
+    type: String
+  }
 });
 
 
@@ -82,25 +134,6 @@ const CompanySchema = new Schema({
   name: {
     type: String,
   },
-  email: {
-    type: String,
-    required: true,
-    match: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i
-  },
-  url: {
-    type: String,
-  },
-  address: {
-    street: {
-      type: String
-    },
-    city: {
-      type: String
-    },
-    zipcode: {
-      type: String
-    },
-  },
   password: {
     type: String,
     required: true,
@@ -109,9 +142,19 @@ const CompanySchema = new Schema({
   description: {
     type: String,
   },
+  address: AddressSchema,
+  contact: [ContactSchema],
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  createdOn: {
+    type: Date,
+    default: Date.now()
+  }
 });
 
-CompanySchema.pre("save", async function(next) {
+CompanySchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
@@ -126,7 +169,7 @@ CompanySchema.pre("save", async function(next) {
   }
 });
 
-CompanySchema.methods.passwordIsValid = async function(password) {
+CompanySchema.methods.passwordIsValid = async function (password) {
   try {
     return bcrypt.compareSync(password, this.password);
   } catch (e) {
