@@ -20,3 +20,12 @@ exports.companyRegistrationSchema = {
     errorMessage: "Invalid password"
   }
 };
+
+exports.companyLoginSchema = {
+  "email": {
+    // notEmpty: true,
+    isEmail: {
+      errorMessage: "Invalid email"
+    },
+  }
+};
