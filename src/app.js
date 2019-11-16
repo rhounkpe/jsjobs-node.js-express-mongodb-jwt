@@ -16,12 +16,9 @@ module.exports = () => {
   app.use(bodyParser.json());
   app.use(cors());
 
-
   jobRoutes.initializePublicApiRoutes(app);
   userRoutes.initializePublicApiRoutes(app);
   companyRoutes.initializePublicApiRoutes(app);
-
-
 
 
   app.use((req, res, next) => {

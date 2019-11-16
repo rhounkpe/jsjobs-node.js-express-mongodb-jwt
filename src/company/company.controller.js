@@ -3,12 +3,15 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-const {check, validationResult, checkSchema} = require('express-validator');
-
 const {getCompanyModel, getLoginModel} = require('./company.model.factory');
-const {companyRegistrationSchema} = require('./company.validation.schemas');
 
 
+/**
+ *
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
 exports.login = async (req, res) => {
   // Against Brute Force Attack
   const delayResponse = response => {
@@ -92,21 +95,30 @@ exports.login = async (req, res) => {
   }
 };
 
-
+/**
+ *
+ * @param location
+ * @param msg
+ * @param param
+ * @param value
+ * @param nestedErrors
+ * @return {string}
+ */
 const errorFormatter = ({location, msg, param, value, nestedErrors}) => {
   // Build your resulting errors however you want! String, object, whatever - it works!
   return `${location}[${param}]: ${msg}`;
 };
 
+
+/**
+ *
+ * @param req
+ * @param res
+ * @return {Promise<*|Promise<any>>}
+ */
 exports.register = async (req, res) => {
   try {
     const Company = await getCompanyModel();
-
-    checkSchema(companyRegistrationSchema);
-    const errors = validationResult(req).formatWith(errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(500).json(`There is an error: ${errors.array()}`);
-    }
 
     if (req.body) {
       const email = req.body.email.trim();
@@ -147,6 +159,13 @@ exports.register = async (req, res) => {
 
 };
 
+
+/**
+ *
+ * @param req
+ * @param res
+ * @return {Promise<any>}
+ */
 exports.logout = (req, res) => {
   return new Promise((resolve, reject) => {
     try {
