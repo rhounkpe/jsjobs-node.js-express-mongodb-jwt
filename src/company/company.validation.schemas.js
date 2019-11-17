@@ -1,10 +1,25 @@
 'use strict';
 
+
 exports.companyRegistrationSchema = {
-  "email": {
+  'addresses.*.postalCode': {
+    // Make this field optional when undefined or null
+/*    optional: {
+      options: {
+        nullable: true
+      }
+    },
+    isPostalCode: true,*/
+    isLength: {min: 10}
+  },
+  "contact.*": {
+
     //notEmpty: true,
     isEmail: {
       errorMessage: "Invalid Email"
+    },
+    isLength: {
+      min: 20
     }
   },
   "password": {

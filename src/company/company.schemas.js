@@ -146,7 +146,7 @@ const CompanySchema = new Schema({
     type: String,
   },
   address: AddressSchema,
-  contact: [ContactSchema],
+  contact: ContactSchema,
   isActive: {
     type: Boolean,
     default: true

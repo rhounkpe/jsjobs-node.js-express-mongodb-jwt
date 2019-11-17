@@ -10,11 +10,11 @@ const companyRoutes = require('./company/company.route');
 module.exports = () => {
   const app = express();
 
-  sessionManagementConfig(app);
-
   app.use(bodyParser.urlencoded({ extended: true}));
   app.use(bodyParser.json());
   app.use(cors());
+
+  sessionManagementConfig(app);
 
   jobRoutes.initializePublicApiRoutes(app);
   userRoutes.initializePublicApiRoutes(app);

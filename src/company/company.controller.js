@@ -1,9 +1,10 @@
 'use strict';
 
+const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-const {getCompanyModel, getLoginModel} = require('./company.model.factory');
+const { getCompanyModel, getLoginModel } = require('./company.model.factory');
 
 
 /**
@@ -95,20 +96,6 @@ exports.login = async (req, res) => {
   }
 };
 
-/**
- *
- * @param location
- * @param msg
- * @param param
- * @param value
- * @param nestedErrors
- * @return {string}
- */
-const errorFormatter = ({location, msg, param, value, nestedErrors}) => {
-  // Build your resulting errors however you want! String, object, whatever - it works!
-  return `${location}[${param}]: ${msg}`;
-};
-
 
 /**
  *
@@ -117,18 +104,42 @@ const errorFormatter = ({location, msg, param, value, nestedErrors}) => {
  * @return {Promise<*|Promise<any>>}
  */
 exports.register = async (req, res) => {
+  console.log(`req.body = ${JSON.stringify(req.body)}`);
   try {
     const Company = await getCompanyModel();
 
+
+    let name;
+    let email;
+    let password;
+
     if (req.body) {
-      const email = req.body.email.trim();
-      const password = req.body.password.trim();
-      const nickname = req.body.nickname.trim();
+      if (req.body.name) {
+        name = req.body.name;
+
+        if (name) {
+          name = name.trim();
+        }
+      }
+
+      if (req.body.contact) {
+        email = req.body.contact.email;
+
+        if (email) {
+          email = email.trim();
+        }
+      }
+
+      password = req.body.password;
+      if (password) {
+        password = password.trim();
+      }
+
 
       const submittedCompany = {
-        name: nickname,
-        email: email,
-        password: password
+        name,
+        email,
+        password,
       };
 
       const company = new Company(submittedCompany);
@@ -144,10 +155,10 @@ exports.register = async (req, res) => {
           return res.status(400).send({message: `Error: ${err.stack}`});
         });
 
-      res.status(201).json(company);
+      return res.status(201).json(company);
 
     } else {
-      res.json({
+      return res.json({
         success: false,
         message: 'Echec de la création de une nouvelle compagnie',
       });
